@@ -54,6 +54,4 @@ Show all the information of the launched configuration, it read the content on t
 
 Destroy everythin
 
-```
-terraform destrou
-```
+> terraform destroy
