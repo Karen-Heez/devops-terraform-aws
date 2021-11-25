@@ -5,7 +5,6 @@ provider "aws" {
 resource "aws_s3_bucket" "terraform_state" {
   bucket = "karen-demo-terraform"
 
-  # Prevent accidental deletion of this S3 bucket
   lifecycle {
     prevent_destroy = false
   }
@@ -57,23 +56,95 @@ module "vpc" {
   create_igw         = true
 }
 
-# module "ec2_instance" {
-#   source  = "terraform-aws-modules/ec2-instance/aws"
-#   version = "~> 3.0"
+module "ec2_instance_private1" {
+  source  = "terraform-aws-modules/ec2-instance/aws"
+  version = "~> 3.0"
 
-#   for_each = toset(["one", "two", "three"])
+  for_each = toset(["one", "two", "three"])
 
-#   name = "instance-${each.key}"
+  name = "instance-${each.key}"
 
-#   ami                    = var.ami
-#   instance_type          = "t2.micro"
-#   key_name               = "user1"
-#   monitoring             = true
-#   vpc_security_group_ids = ["sg-12345678"]
-#   subnet_id              = "subnet-eddcdzz4"
+  ami                    = var.ami
+  instance_type          = "t2.micro"
+  monitoring             = true
+  subnet_id              = module.vpc.private_subnets[0]
 
-#   tags = {
-#     Terraform   = "true"
-#     Environment = "dev"
-#   }
-# }
+  tags = {
+    Terraform   = "true"
+    Environment = "dev"
+  }
+}
+
+
+module "ec2_instance_private2" {
+  source  = "terraform-aws-modules/ec2-instance/aws"
+  version = "~> 3.0"
+
+  for_each = toset(["one-s2", "two-s2"])
+
+  name = "instance-${each.key}"
+
+  ami                    = var.ami
+  instance_type          = "t2.micro"
+  monitoring             = true
+  subnet_id              = module.vpc.private_subnets[1]
+
+  tags = {
+    Terraform   = "true"
+    Environment = "dev"
+  }
+}
+
+
+module "alb" {
+  source  = "terraform-aws-modules/alb/aws"
+  version = "~> 6.0"
+
+  name = "my-alb"
+
+  load_balancer_type = "application"
+
+  vpc_id             = module.vpc
+  subnets            = var.public_subnets
+  # security_groups    = ["sg-edcd9784", "sg-edcd9785"]
+
+
+  target_groups = [
+    {
+      name_prefix      = "pref-"
+      backend_protocol = "HTTP"
+      backend_port     = 80
+      target_type      = "instance"
+      targets = [
+        {
+          target_id = module.ec2_instance_private1
+          port = 80
+        },
+        {
+          target_id = module.ec2_instance_private1
+          port = 8080
+        }
+      ]
+    }
+  ]
+
+  https_listeners = [
+    {
+      port               = 443
+      protocol           = "HTTPS"
+      target_group_index = 0
+    }
+  ]
+
+  http_tcp_listeners = [
+    {
+      port               = 80
+      protocol           = "HTTP"
+      target_group_index = 0
+    }
+  ]
+
+  tags = {
+    Environment = "Test"
+  }
+}
