@@ -106,7 +106,7 @@ module "alb" {
 
   vpc_id             = module.vpc.vpc_id
   subnets            = module.vpc.private_subnets
-  # security_groups    = ["sg-edcd9784", "sg-edcd9785"]
+  security_groups    = ["sg-02a06e1e2fcaa128f"]
   for_each = toset(["one"])
   target_groups = [
     {
