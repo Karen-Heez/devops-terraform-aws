@@ -104,11 +104,10 @@ module "alb" {
 
   load_balancer_type = "application"
 
-  vpc_id             = module.vpc
-  subnets            = var.public_subnets
+  vpc_id             = module.vpc.vpc_id
+  subnets            = var.public_subnets[0]
   # security_groups    = ["sg-edcd9784", "sg-edcd9785"]
-
-
+  for_each = toset(["one", "two", "three"])
   target_groups = [
     {
       name_prefix      = "pref-"
@@ -117,24 +116,13 @@ module "alb" {
       target_type      = "instance"
       targets = [
         {
-          target_id = module.ec2_instance_private1
+          target_id = module.ec2_instance_private1[each.key].id
           port = 80
-        },
-        {
-          target_id = module.ec2_instance_private1
-          port = 8080
         }
       ]
     }
   ]
 
-  https_listeners = [
-    {
-      port               = 443
-      protocol           = "HTTPS"
-      target_group_index = 0
-    }
-  ]
 
   http_tcp_listeners = [
     {
