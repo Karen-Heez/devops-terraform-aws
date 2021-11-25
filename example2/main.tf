@@ -105,9 +105,9 @@ module "alb" {
   load_balancer_type = "application"
 
   vpc_id             = module.vpc.vpc_id
-  subnets            = var.public_subnets[0]
+  subnets            = module.vpc.private_subnets
   # security_groups    = ["sg-edcd9784", "sg-edcd9785"]
-  for_each = toset(["one", "two", "three"])
+  for_each = toset(["one"])
   target_groups = [
     {
       name_prefix      = "pref-"
