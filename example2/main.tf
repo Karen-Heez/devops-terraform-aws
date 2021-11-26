@@ -33,7 +33,7 @@ resource "aws_dynamodb_table" "terraform_locks" {
   }
 }
 
-# 3. terraform init / apply 
+
 terraform {
   backend "s3" {
     bucket         = "karen-demo-terraform"
@@ -71,7 +71,7 @@ module "ec2_instance_private1" {
 
   tags = {
     Terraform   = "true"
-    Environment = "dev"
+    Environment = "development"
   }
 }
 
@@ -106,7 +106,7 @@ module "alb" {
 
   vpc_id             = module.vpc.vpc_id
   subnets            = module.vpc.private_subnets
-  security_groups    = ["sg-02a06e1e2fcaa128f"]
+  security_groups    = ["sg-0596aa89a6696eb6a"]
   for_each = toset(["one"])
   target_groups = [
     {
